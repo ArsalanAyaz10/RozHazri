@@ -218,7 +218,7 @@ class UnlockPinScreen extends GetView<UnlockPinController> {
                           ? null
                           : controller.onForgotPin,
                       child: Text(
-                        "Forgot PIN?",
+                        "Use Fingerprint",
                         style: TextStyle(
                           fontFamily: AppFonts.outfit,
                           color: controller.isLocked.value
