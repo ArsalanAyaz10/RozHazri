@@ -129,18 +129,8 @@ class UnlockPinController extends GetxController {
   }
 
   void onForgotPin() {
-    Get.defaultDialog(
-      title: 'Forgot PIN?',
-      middleText: 'Your PIN will be reset and you\'ll need to set a new one.',
-      textConfirm: 'Reset PIN',
-      textCancel: 'Cancel',
-      confirmTextColor: Colors.white,
-      onConfirm: () async {
-        await _storage.delete(key: 'user_pin');
-        Get.back();
-        Get.offNamed('/set-pin');
-      },
-    );
+    Get.back();
+    Get.offNamed('/fingerprint');
   }
 
   // Helper getter for UI
