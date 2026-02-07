@@ -7,6 +7,8 @@ abstract class Routes {
   static const matchpin = '/matchpin';
   static const fingerprint = '/fingerprint';
   static const workers = '/workers';
+  static const addworkers = '/addworkers';
+  static const editworkers = '/editworkers';
   static const attendance = '/attendance';
   static const reports = '/reports';
   static const account = '/account';
@@ -14,5 +16,4 @@ abstract class Routes {
   static const payroll = '/payroll';
   static const export = '/export';
   static const settings = '/settings';
-  static const wages = '/wages';
 }

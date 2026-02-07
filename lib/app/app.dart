@@ -4,12 +4,8 @@ import 'package:roz_hazri/app/bindings/initial_bindings.dart';
 import 'package:roz_hazri/app/routes/app_pages.dart';
 import 'package:roz_hazri/core/themes/app_theme.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class RozHazriApp extends StatelessWidget {
+  const RozHazriApp({super.key});
 
   @override
   Widget build(BuildContext context) {

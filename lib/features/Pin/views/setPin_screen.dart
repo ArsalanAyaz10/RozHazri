@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:roz_hazri/app/controllers/pin_contrloller.dart';
-import 'package:roz_hazri/core/constants/widgets/BackgroundCircle.dart';
+import 'package:roz_hazri/features/Pin/controllers/pin_contrloller.dart';
+import 'package:roz_hazri/core/widgets/BackgroundCircle.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
 

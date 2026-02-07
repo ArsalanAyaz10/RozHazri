@@ -1,13 +1,11 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:roz_hazri/app/routes/app_pages.dart';
-import 'package:roz_hazri/core/constants/widgets/ActionCard.dart';
-import 'package:roz_hazri/core/constants/widgets/StatCard.dart';
+import 'package:roz_hazri/core/widgets/ActionCard.dart';
+import 'package:roz_hazri/core/widgets/StatCard.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
-import '../../app/controllers/home_controller.dart';
+import 'controllers/home_controller.dart';
 
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
@@ -192,27 +190,27 @@ class HomePage extends GetView<HomeController> {
                   ActionCard(
                     title: "Attendance",
                     icon: Icons.calendar_month,
-                    onTap: () => Get.toNamed(Routes.wages),
+                    onTap: () => Get.toNamed(Routes.attendance),
                   ),
                   ActionCard(
                     title: "Wage Cycles",
                     icon: Icons.history,
-                    onTap: () => Get.toNamed(Routes.wages),
+                    onTap: () => Get.toNamed(Routes.wagecycles),
                   ),
                   ActionCard(
                     title: "Payroll",
                     icon: Icons.money_outlined,
-                    onTap: () => Get.toNamed(Routes.wages),
+                    onTap: () => Get.toNamed(Routes.payroll),
                   ),
                   ActionCard(
                     title: "Export/Import",
                     icon: Icons.compare_arrows_rounded,
-                    onTap: () => Get.toNamed(Routes.wages),
+                    onTap: () => Get.toNamed(Routes.export),
                   ),
                   ActionCard(
                     title: "Settings",
                     icon: Icons.settings,
-                    onTap: () => Get.toNamed(Routes.wages),
+                    onTap: () => Get.toNamed(Routes.settings),
                   ),
                 ],
               ),

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:get/get_state_manager/src/simple/get_view.dart';
-import 'package:roz_hazri/app/controllers/UnlockPin_controller.dart';
-import 'package:roz_hazri/core/constants/widgets/BackgroundCircle.dart';
+import 'package:roz_hazri/features/Pin/controllers/UnlockPin_controller.dart';
+import 'package:roz_hazri/core/widgets/BackgroundCircle.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
 

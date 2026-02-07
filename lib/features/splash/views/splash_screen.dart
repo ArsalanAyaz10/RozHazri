@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_state_manager/src/simple/get_view.dart';
-import 'package:roz_hazri/app/controllers/splash_controller.dart';
+import 'package:roz_hazri/features/splash/controllers/splash_controller.dart';
 import 'package:roz_hazri/app/routes/app_pages.dart';
-import 'package:roz_hazri/core/constants/widgets/BackgroundCircle.dart';
+import 'package:roz_hazri/core/widgets/BackgroundCircle.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
-import 'package:roz_hazri/features/auth/setPin_screen.dart';
+import 'package:roz_hazri/features/Pin/views/setPin_screen.dart';
 
 class SplashScreen extends GetView<SplashController> {
   const SplashScreen({super.key});
