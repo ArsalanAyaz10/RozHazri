@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart' hide Worker;
 import 'package:roz_hazri/core/database/app_database.dart';
 import 'package:roz_hazri/data/repositories/attendance_repository.dart';

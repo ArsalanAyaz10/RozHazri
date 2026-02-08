@@ -50,7 +50,6 @@ class AddworkerController extends GetxController {
       );
     } catch (e) {
       Get.snackbar("Error", "Failed to save: $e");
-      print("Error saving worker: $e");
     } finally {
       isSaving(false);
     }

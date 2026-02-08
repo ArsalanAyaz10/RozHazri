@@ -6,6 +6,8 @@ import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
 
 class PinScreen extends GetView<PinController> {
+  const PinScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

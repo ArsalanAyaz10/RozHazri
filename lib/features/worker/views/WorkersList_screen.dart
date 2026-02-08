@@ -4,7 +4,6 @@ import 'package:roz_hazri/features/worker/controllers/workerlist_controller.dart
 import 'package:roz_hazri/core/widgets/WorkerCard.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
-import 'package:roz_hazri/core/database/app_database.dart';
 
 class WorkerslistScreen extends GetView<WorkerlistController> {
   const WorkerslistScreen({super.key});

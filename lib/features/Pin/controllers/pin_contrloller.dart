@@ -28,7 +28,9 @@ class PinController extends GetxController {
 
         Get.offNamed('/home');
       } catch (e) {
-        print("Error saving pin: $e");
+        if (kDebugMode) {
+          print("Error saving pin: $e");
+        }
       }
     }
   }

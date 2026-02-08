@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get_rx/src/rx_typedefs/rx_typedefs.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
 
@@ -134,13 +133,4 @@ class WorkerCard extends StatelessWidget {
     );
   }
 
-  String _getInitials(String name) {
-    final parts = name.split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return name.length >= 2
-        ? name.substring(0, 2).toUpperCase()
-        : name.toUpperCase();
-  }
 }
