@@ -12,8 +12,24 @@ class AttendanceRepository {
     return _db.select(_db.attendance).get();
   }
 
-  Future<int> addAttendance(AttendanceCompanion attendance) {
-    return _db.into(_db.attendance).insert(attendance);
+  DateTime _normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  Stream<List<AttendanceData>> watchAttendanceByDate(DateTime date) {
+  final normalizedDate = _normalizeDate(date);
+  return (_db.select(_db.attendance)..where((tbl) => tbl.date.equals(normalizedDate))).watch();
+}
+
+  Future<void> addAttendance(AttendanceCompanion attendance) {
+    // Ensure the date being inserted is normalized
+    final normalizedDate = _normalizeDate(attendance.date.value);
+    final updatedAttendance = attendance.copyWith(
+      date: Value(normalizedDate),
+    );
+    
+    // insertOrReplace correctly handles the (workerId, date) unique constraint
+    return _db.into(_db.attendance).insert(updatedAttendance, mode: InsertMode.insertOrReplace);
   }
 
   Future<List<AttendanceData>> getAttendanceByWorker(int workerId) {
@@ -23,13 +39,20 @@ class AttendanceRepository {
   }
 
   Future<List<AttendanceData>> getAttendanceByDate(DateTime date) {
+    final normalizedDate = _normalizeDate(date);
     return (_db.select(
       _db.attendance,
-    )..where((tbl) => tbl.date.equals(date))).get();
+    )..where((tbl) => tbl.date.equals(normalizedDate))).get();
+  }
+
+  Stream<List<AttendanceData>> watchAttendance(int workerId) {
+    return (_db.select(
+      _db.attendance,
+    )..where((t) => t.workerId.equals(workerId))).watch();
   }
 
   // BUSINESS LOGIC
- 
+
   /// Attendance Wage based on Status
   double _calculateAttendanceWage({
     required double dailyWage,
@@ -84,7 +107,7 @@ class AttendanceRepository {
   }
 
   // MONTHLY SALARY CALCULATION
-  
+
   Future<double> calculateMonthlySalary({
     required Worker worker,
     required DateTime month,

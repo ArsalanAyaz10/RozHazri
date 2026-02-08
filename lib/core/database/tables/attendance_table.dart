@@ -13,4 +13,9 @@ class Attendance extends Table {
   TextColumn get remarks => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {workerId, date},
+  ];
 }

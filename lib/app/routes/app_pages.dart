@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import 'package:roz_hazri/features/Pin/bindings/UnlockPin_bindings.dart';
+import 'package:roz_hazri/features/attendance/binding/attendance_binding.dart';
+import 'package:roz_hazri/features/attendance/views/attendance_screen.dart';
 import 'package:roz_hazri/features/fingerprint/bindings/fingerprint_binding.dart';
 import 'package:roz_hazri/features/Pin/bindings/pin_binding.dart';
 import 'package:roz_hazri/features/home/bindings/home_binding.dart';
@@ -15,6 +17,8 @@ import 'package:roz_hazri/features/worker/bindings/workerlist_binding.dart';
 import 'package:roz_hazri/features/worker/views/AddWorker_screen.dart';
 import 'package:roz_hazri/features/worker/views/WorkersList_screen.dart';
 import 'package:roz_hazri/features/worker/views/editWorker_screen.dart';
+import 'package:roz_hazri/features/attendance/binding/attendanceSheet_binding.dart';
+import 'package:roz_hazri/features/attendance/views/attendanceSheet_screen.dart';
 
 part 'app_routes.dart';
 
@@ -59,7 +63,16 @@ class AppPages {
       page: () => EditworkerScreen(),
       binding: EditworkerBinding(),
     ),
-    //   GetPage(name: Routes.attendance,page: ()=> AttendanceScreen()),
+    GetPage(
+      name: Routes.attendance,
+      page: () => MarkAttendanceScreen(),
+      binding: AttendanceBinding(),
+    ),
+     GetPage(
+      name: Routes.viewattendance,
+      page: () => AttendanceSheetScreen(),
+      binding: ViewAttendanceBinding(),
+    ),
     //   GetPage(name: Routes.reports,page: ()=> ReportsScreen()),
     //   GetPage(name: Routes.account,page:()=> AccountScreen()),
     //   GetPage(name: Routes.wagecycles,page:()=> WageCyclesScreen()),

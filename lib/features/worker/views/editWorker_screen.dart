@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
 import 'package:roz_hazri/features/worker/controllers/editworker_controller.dart';
+import 'package:intl/intl.dart';
 
 class EditworkerScreen extends GetView<EditworkerController> {
   const EditworkerScreen({super.key});
@@ -62,6 +63,8 @@ class EditworkerScreen extends GetView<EditworkerController> {
               const SizedBox(height: 20),
               _buildLabel("Wage Type"),
               _buildWageToggle(),
+              const SizedBox(height: 20),
+              _buildAttendanceCalendar(),
 
               const SizedBox(height: 40),
               SizedBox(
@@ -218,6 +221,140 @@ class EditworkerScreen extends GetView<EditworkerController> {
           );
         }).toList(),
       ),
+    );
+  }
+
+  Widget _buildAttendanceCalendar() {
+    final now = DateTime.now();
+    final daysInMonth = DateUtils.getDaysInMonth(now.year, now.month);
+
+    // Normalize Sunday (weekday 7) to start the grid correctly
+    final firstDayWeekday = DateTime(now.year, now.month, 1).weekday;
+    final firstDayOffset = firstDayWeekday == 7 ? 0 : firstDayWeekday - 1;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Monthly Attendance",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  DateFormat('MMMM yyyy').format(now),
+                  style: const TextStyle(color: Colors.green, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+                .map(
+                  (d) => Text(
+                    d,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 10),
+
+          // FIX: Wrap the builder but ensure attendanceRecords.value is accessed
+          Obx(() {
+            // Touching .length here tells GetX: "Rebuild this whenever the list changes"
+            // This prevents the "improper use of GetX" error.
+            controller.attendanceRecords.length;
+
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 7,
+                mainAxisSpacing: 10,
+              ),
+              itemCount: daysInMonth + firstDayOffset,
+              itemBuilder: (context, index) {
+                if (index < firstDayOffset) return const SizedBox();
+
+                final day = index - firstDayOffset + 1;
+                final date = DateTime(now.year, now.month, day);
+                final status = controller.getStatusForDate(date);
+
+                Color dotColor = Colors.transparent;
+                if (status == "P")
+                  dotColor = AppColors.primaryGreen;
+                else if (status == "A")
+                  dotColor = AppColors.error;
+                else if (status == "H")
+                  dotColor = Colors.orange;
+
+                return Column(
+                  children: [
+                    Text(
+                      "$day",
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    CircleAvatar(radius: 3, backgroundColor: dotColor),
+                  ],
+                );
+              },
+            );
+          }),
+          const Divider(height: 32),
+          Obx(() => _buildCalendarFooter()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalendarFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _statusIndicator(
+          "Present",
+          controller.presentCount.value,
+          Colors.green,
+        ),
+        _statusIndicator("Absent", controller.absentCount.value, Colors.red),
+        _statusIndicator("Half", controller.halfDayCount.value, Colors.orange),
+      ],
+    );
+  }
+
+  Widget _statusIndicator(String label, int count, Color color) {
+    return Row(
+      children: [
+        CircleAvatar(radius: 4, backgroundColor: color),
+        const SizedBox(width: 6),
+        Text(
+          "$label: $count",
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        ),
+      ],
     );
   }
 }
