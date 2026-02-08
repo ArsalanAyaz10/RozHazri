@@ -3,9 +3,16 @@ import 'package:drift/drift.dart' as drift;
 import 'package:get/get.dart' hide Worker;
 import 'package:roz_hazri/core/database/app_database.dart';
 import 'package:roz_hazri/data/repositories/worker_repository.dart';
+import 'package:roz_hazri/data/repositories/attendance_repository.dart';
 
 class EditworkerController extends GetxController {
   final WorkerRepository _repository = Get.find<WorkerRepository>();
+  final AttendanceRepository _attendanceRepo = Get.find<AttendanceRepository>();
+
+  var attendanceRecords = <AttendanceData>[].obs;
+  var presentCount = 0.obs;
+  var absentCount = 0.obs;
+  var halfDayCount = 0.obs;
 
   final List<String> wageTypes = ['Daily', 'Hourly', 'Fixed'];
 
@@ -15,7 +22,6 @@ class EditworkerController extends GetxController {
   late Worker originalWorker;
   var selectedWageType = 'Daily'.obs;
 
-  // Form Controllers
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   final rateController = TextEditingController();
@@ -25,6 +31,47 @@ class EditworkerController extends GetxController {
     super.onInit();
     workerId = Get.arguments as int;
     _loadWorkerData();
+    _loadAttendanceHistory();
+  }
+
+  void _loadAttendanceHistory() {
+    final now = DateTime.now();
+
+    attendanceRecords.bindStream(
+      _attendanceRepo.watchAttendance(workerId).map((allHistory) {
+        final currentMonthRecords = allHistory.where((rec) {
+          // Robust comparison handling potential non-normalized legacy data
+          return rec.date.month == now.month && rec.date.year == now.year;
+        }).toList();
+
+        // Update counters inside stream
+        presentCount.value = currentMonthRecords
+            .where((e) => e.status == 'P')
+            .length;
+
+        absentCount.value = currentMonthRecords
+            .where((e) => e.status == 'A')
+            .length;
+
+        halfDayCount.value = currentMonthRecords
+            .where((e) => e.status == 'H')
+            .length;
+
+        attendanceRecords.refresh(); // Force GetX to update viewers
+        return currentMonthRecords;
+      }),
+    );
+  }
+
+  String? getStatusForDate(DateTime date) {
+    
+    final record = attendanceRecords.firstWhereOrNull((e) {
+      return e.date.year == date.year &&
+          e.date.month == date.month &&
+          e.date.day == date.day;
+    });
+
+    return record?.status;
   }
 
   Future<void> _loadWorkerData() async {
@@ -73,8 +120,8 @@ class EditworkerController extends GetxController {
           TextButton(
             onPressed: () async {
               await _repository.deleteWorker(workerId);
-              Get.back(); // close dialog
-              Get.back(result: true); // go back to list
+              Get.back();
+              Get.back(result: true);
             },
             child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),

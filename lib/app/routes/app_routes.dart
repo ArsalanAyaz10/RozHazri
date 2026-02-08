@@ -10,6 +10,7 @@ abstract class Routes {
   static const addworkers = '/addworkers';
   static const editworkers = '/editworkers';
   static const attendance = '/attendance';
+  static const viewattendance = '/viewattendance';
   static const reports = '/reports';
   static const account = '/account';
   static const wagecycles = '/wagecycles';
