@@ -3,12 +3,14 @@ import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:roz_hazri/core/database/app_database.dart';
 import 'package:roz_hazri/data/repositories/attendance_repository.dart';
-import 'package:roz_hazri/data/repositories/worker_repository.dart';
+import 'package:roz_hazri/data/repositories/payrollPeriodWorkers_repository.dart';
+import 'package:roz_hazri/data/repositories/payrollPeriod_repository.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 
 class AttendanceController extends GetxController {
   final AttendanceRepository _attendanceRepo = Get.find<AttendanceRepository>();
-  final WorkerRepository _workerRepo = Get.find<WorkerRepository>();
+  final PayrollPeriodWorkersRepository _periodWorkerRepo = Get.find<PayrollPeriodWorkersRepository>();
+  final PayrollperiodRepository _periodRepo = Get.find<PayrollperiodRepository>();
 
   var selectedDate = DateTime(
     DateTime.now().year,
@@ -19,6 +21,7 @@ class AttendanceController extends GetxController {
   var isLoading = true.obs;
   var attendanceMap = <int, String>{}.obs;
   var calendarDates = <DateTime>[].obs;
+  var activePeriod = Rxn<PayrollperiodTableData>(); 
 
   @override
   void onInit() {
@@ -28,11 +31,10 @@ class AttendanceController extends GetxController {
   }
 
   void _generateCalendarDates() {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final centerDate = selectedDate.value;
     calendarDates.value = List.generate(
       7,
-      (index) => today.subtract(Duration(days: 3 - index)),
+      (index) => centerDate.subtract(Duration(days: 3 - index)),
     );
   }
 
@@ -40,7 +42,15 @@ class AttendanceController extends GetxController {
     try {
       isLoading(true);
       attendanceMap.clear();
-      workers.value = await _workerRepo.getAllWorkers();
+
+      activePeriod.value = await _periodRepo.getPeriodByDate(selectedDate.value);
+
+      if (activePeriod.value == null) {
+        workers.clear(); 
+        return;
+      }
+
+      workers.value = await _periodWorkerRepo.getWorkersForPeriod(activePeriod.value!.id);
 
       final existingRecords = await _attendanceRepo.getAttendanceByDate(
         selectedDate.value,
@@ -62,6 +72,7 @@ class AttendanceController extends GetxController {
     final normalizedDate = DateTime(date.year, date.month, date.day);
     if (selectedDate.value != normalizedDate) {
       selectedDate.value = normalizedDate;
+      _generateCalendarDates();
       loadData();
     }
   }
@@ -84,7 +95,7 @@ class AttendanceController extends GetxController {
         backgroundColor: AppColors.primaryGreen,
         colorText: AppColors.white,
       );
-      await loadData(); // Ensure we reload after saving
+      await loadData();
     } catch (e) {
       Get.snackbar(
         "Error",

@@ -3,10 +3,10 @@ import 'package:get/get.dart';
 
 class HomeController extends GetxController {
   // Reactive variables
-  final RxInt activeWorkers = 12.obs;
+  final RxInt activeWorkers = 0.obs;
   final RxString greeting = ''.obs;
   final RxString userName = 'Admin'.obs;
-  final RxInt todaysCost = 1000.obs;
+  final RxInt todaysCost = 0.obs;
   var currentIndex = 0.obs;
 
   @override

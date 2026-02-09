@@ -76,6 +76,17 @@ class $WorkersTable extends Workers with TableInfo<$WorkersTable, Worker> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -84,6 +95,7 @@ class $WorkersTable extends Workers with TableInfo<$WorkersTable, Worker> {
     paymentType,
     rate,
     createdAt,
+    deletedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -137,6 +149,12 @@ class $WorkersTable extends Workers with TableInfo<$WorkersTable, Worker> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -170,6 +188,10 @@ class $WorkersTable extends Workers with TableInfo<$WorkersTable, Worker> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -186,6 +208,7 @@ class Worker extends DataClass implements Insertable<Worker> {
   final String paymentType;
   final double rate;
   final DateTime createdAt;
+  final DateTime? deletedAt;
   const Worker({
     required this.id,
     required this.name,
@@ -193,6 +216,7 @@ class Worker extends DataClass implements Insertable<Worker> {
     required this.paymentType,
     required this.rate,
     required this.createdAt,
+    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -205,6 +229,9 @@ class Worker extends DataClass implements Insertable<Worker> {
     map['payment_type'] = Variable<String>(paymentType);
     map['rate'] = Variable<double>(rate);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
@@ -218,6 +245,9 @@ class Worker extends DataClass implements Insertable<Worker> {
       paymentType: Value(paymentType),
       rate: Value(rate),
       createdAt: Value(createdAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -233,6 +263,7 @@ class Worker extends DataClass implements Insertable<Worker> {
       paymentType: serializer.fromJson<String>(json['paymentType']),
       rate: serializer.fromJson<double>(json['rate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -245,6 +276,7 @@ class Worker extends DataClass implements Insertable<Worker> {
       'paymentType': serializer.toJson<String>(paymentType),
       'rate': serializer.toJson<double>(rate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
@@ -255,6 +287,7 @@ class Worker extends DataClass implements Insertable<Worker> {
     String? paymentType,
     double? rate,
     DateTime? createdAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
   }) => Worker(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -262,6 +295,7 @@ class Worker extends DataClass implements Insertable<Worker> {
     paymentType: paymentType ?? this.paymentType,
     rate: rate ?? this.rate,
     createdAt: createdAt ?? this.createdAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   Worker copyWithCompanion(WorkersCompanion data) {
     return Worker(
@@ -273,6 +307,7 @@ class Worker extends DataClass implements Insertable<Worker> {
           : this.paymentType,
       rate: data.rate.present ? data.rate.value : this.rate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -284,14 +319,15 @@ class Worker extends DataClass implements Insertable<Worker> {
           ..write('phone: $phone, ')
           ..write('paymentType: $paymentType, ')
           ..write('rate: $rate, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, name, phone, paymentType, rate, createdAt);
+      Object.hash(id, name, phone, paymentType, rate, createdAt, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -301,7 +337,8 @@ class Worker extends DataClass implements Insertable<Worker> {
           other.phone == this.phone &&
           other.paymentType == this.paymentType &&
           other.rate == this.rate &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class WorkersCompanion extends UpdateCompanion<Worker> {
@@ -311,6 +348,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
   final Value<String> paymentType;
   final Value<double> rate;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> deletedAt;
   const WorkersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -318,6 +356,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
     this.paymentType = const Value.absent(),
     this.rate = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   });
   WorkersCompanion.insert({
     this.id = const Value.absent(),
@@ -326,6 +365,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
     this.paymentType = const Value.absent(),
     required double rate,
     this.createdAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
   }) : name = Value(name),
        rate = Value(rate);
   static Insertable<Worker> custom({
@@ -335,6 +375,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
     Expression<String>? paymentType,
     Expression<double>? rate,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? deletedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -343,6 +384,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
       if (paymentType != null) 'payment_type': paymentType,
       if (rate != null) 'rate': rate,
       if (createdAt != null) 'created_at': createdAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
     });
   }
 
@@ -353,6 +395,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
     Value<String>? paymentType,
     Value<double>? rate,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? deletedAt,
   }) {
     return WorkersCompanion(
       id: id ?? this.id,
@@ -361,6 +404,7 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
       paymentType: paymentType ?? this.paymentType,
       rate: rate ?? this.rate,
       createdAt: createdAt ?? this.createdAt,
+      deletedAt: deletedAt ?? this.deletedAt,
     );
   }
 
@@ -385,6 +429,9 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
     return map;
   }
 
@@ -396,7 +443,8 @@ class WorkersCompanion extends UpdateCompanion<Worker> {
           ..write('phone: $phone, ')
           ..write('paymentType: $paymentType, ')
           ..write('rate: $rate, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
@@ -2027,6 +2075,992 @@ class PayrollperiodTableCompanion
   }
 }
 
+class $PayrollSummaryTableTable extends PayrollSummaryTable
+    with TableInfo<$PayrollSummaryTableTable, PayrollSummaryTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PayrollSummaryTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _periodIdMeta = const VerificationMeta(
+    'periodId',
+  );
+  @override
+  late final GeneratedColumn<int> periodId = GeneratedColumn<int>(
+    'period_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES payrollperiod_table (id)',
+    ),
+  );
+  static const VerificationMeta _workerIdMeta = const VerificationMeta(
+    'workerId',
+  );
+  @override
+  late final GeneratedColumn<int> workerId = GeneratedColumn<int>(
+    'worker_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES workers (id)',
+    ),
+  );
+  static const VerificationMeta _workerNameMeta = const VerificationMeta(
+    'workerName',
+  );
+  @override
+  late final GeneratedColumn<String> workerName = GeneratedColumn<String>(
+    'worker_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _workerRateMeta = const VerificationMeta(
+    'workerRate',
+  );
+  @override
+  late final GeneratedColumn<double> workerRate = GeneratedColumn<double>(
+    'worker_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalWageMeta = const VerificationMeta(
+    'totalWage',
+  );
+  @override
+  late final GeneratedColumn<double> totalWage = GeneratedColumn<double>(
+    'total_wage',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _overtimePayMeta = const VerificationMeta(
+    'overtimePay',
+  );
+  @override
+  late final GeneratedColumn<double> overtimePay = GeneratedColumn<double>(
+    'overtime_pay',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bonusMeta = const VerificationMeta('bonus');
+  @override
+  late final GeneratedColumn<double> bonus = GeneratedColumn<double>(
+    'bonus',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deductionMeta = const VerificationMeta(
+    'deduction',
+  );
+  @override
+  late final GeneratedColumn<double> deduction = GeneratedColumn<double>(
+    'deduction',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalDaysPresentMeta = const VerificationMeta(
+    'totalDaysPresent',
+  );
+  @override
+  late final GeneratedColumn<int> totalDaysPresent = GeneratedColumn<int>(
+    'total_days_present',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    periodId,
+    workerId,
+    workerName,
+    workerRate,
+    totalWage,
+    overtimePay,
+    bonus,
+    deduction,
+    totalDaysPresent,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'payroll_summary_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PayrollSummaryTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(
+        _periodIdMeta,
+        periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('worker_id')) {
+      context.handle(
+        _workerIdMeta,
+        workerId.isAcceptableOrUnknown(data['worker_id']!, _workerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_workerIdMeta);
+    }
+    if (data.containsKey('worker_name')) {
+      context.handle(
+        _workerNameMeta,
+        workerName.isAcceptableOrUnknown(data['worker_name']!, _workerNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_workerNameMeta);
+    }
+    if (data.containsKey('worker_rate')) {
+      context.handle(
+        _workerRateMeta,
+        workerRate.isAcceptableOrUnknown(data['worker_rate']!, _workerRateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_workerRateMeta);
+    }
+    if (data.containsKey('total_wage')) {
+      context.handle(
+        _totalWageMeta,
+        totalWage.isAcceptableOrUnknown(data['total_wage']!, _totalWageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_totalWageMeta);
+    }
+    if (data.containsKey('overtime_pay')) {
+      context.handle(
+        _overtimePayMeta,
+        overtimePay.isAcceptableOrUnknown(
+          data['overtime_pay']!,
+          _overtimePayMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_overtimePayMeta);
+    }
+    if (data.containsKey('bonus')) {
+      context.handle(
+        _bonusMeta,
+        bonus.isAcceptableOrUnknown(data['bonus']!, _bonusMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bonusMeta);
+    }
+    if (data.containsKey('deduction')) {
+      context.handle(
+        _deductionMeta,
+        deduction.isAcceptableOrUnknown(data['deduction']!, _deductionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deductionMeta);
+    }
+    if (data.containsKey('total_days_present')) {
+      context.handle(
+        _totalDaysPresentMeta,
+        totalDaysPresent.isAcceptableOrUnknown(
+          data['total_days_present']!,
+          _totalDaysPresentMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalDaysPresentMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PayrollSummaryTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PayrollSummaryTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      periodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_id'],
+      )!,
+      workerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worker_id'],
+      )!,
+      workerName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}worker_name'],
+      )!,
+      workerRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}worker_rate'],
+      )!,
+      totalWage: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_wage'],
+      )!,
+      overtimePay: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}overtime_pay'],
+      )!,
+      bonus: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}bonus'],
+      )!,
+      deduction: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}deduction'],
+      )!,
+      totalDaysPresent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_days_present'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PayrollSummaryTableTable createAlias(String alias) {
+    return $PayrollSummaryTableTable(attachedDatabase, alias);
+  }
+}
+
+class PayrollSummaryTableData extends DataClass
+    implements Insertable<PayrollSummaryTableData> {
+  final int id;
+  final int periodId;
+  final int workerId;
+  final String workerName;
+  final double workerRate;
+  final double totalWage;
+  final double overtimePay;
+  final double bonus;
+  final double deduction;
+  final int totalDaysPresent;
+  final DateTime createdAt;
+  const PayrollSummaryTableData({
+    required this.id,
+    required this.periodId,
+    required this.workerId,
+    required this.workerName,
+    required this.workerRate,
+    required this.totalWage,
+    required this.overtimePay,
+    required this.bonus,
+    required this.deduction,
+    required this.totalDaysPresent,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['period_id'] = Variable<int>(periodId);
+    map['worker_id'] = Variable<int>(workerId);
+    map['worker_name'] = Variable<String>(workerName);
+    map['worker_rate'] = Variable<double>(workerRate);
+    map['total_wage'] = Variable<double>(totalWage);
+    map['overtime_pay'] = Variable<double>(overtimePay);
+    map['bonus'] = Variable<double>(bonus);
+    map['deduction'] = Variable<double>(deduction);
+    map['total_days_present'] = Variable<int>(totalDaysPresent);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PayrollSummaryTableCompanion toCompanion(bool nullToAbsent) {
+    return PayrollSummaryTableCompanion(
+      id: Value(id),
+      periodId: Value(periodId),
+      workerId: Value(workerId),
+      workerName: Value(workerName),
+      workerRate: Value(workerRate),
+      totalWage: Value(totalWage),
+      overtimePay: Value(overtimePay),
+      bonus: Value(bonus),
+      deduction: Value(deduction),
+      totalDaysPresent: Value(totalDaysPresent),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PayrollSummaryTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PayrollSummaryTableData(
+      id: serializer.fromJson<int>(json['id']),
+      periodId: serializer.fromJson<int>(json['periodId']),
+      workerId: serializer.fromJson<int>(json['workerId']),
+      workerName: serializer.fromJson<String>(json['workerName']),
+      workerRate: serializer.fromJson<double>(json['workerRate']),
+      totalWage: serializer.fromJson<double>(json['totalWage']),
+      overtimePay: serializer.fromJson<double>(json['overtimePay']),
+      bonus: serializer.fromJson<double>(json['bonus']),
+      deduction: serializer.fromJson<double>(json['deduction']),
+      totalDaysPresent: serializer.fromJson<int>(json['totalDaysPresent']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'periodId': serializer.toJson<int>(periodId),
+      'workerId': serializer.toJson<int>(workerId),
+      'workerName': serializer.toJson<String>(workerName),
+      'workerRate': serializer.toJson<double>(workerRate),
+      'totalWage': serializer.toJson<double>(totalWage),
+      'overtimePay': serializer.toJson<double>(overtimePay),
+      'bonus': serializer.toJson<double>(bonus),
+      'deduction': serializer.toJson<double>(deduction),
+      'totalDaysPresent': serializer.toJson<int>(totalDaysPresent),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PayrollSummaryTableData copyWith({
+    int? id,
+    int? periodId,
+    int? workerId,
+    String? workerName,
+    double? workerRate,
+    double? totalWage,
+    double? overtimePay,
+    double? bonus,
+    double? deduction,
+    int? totalDaysPresent,
+    DateTime? createdAt,
+  }) => PayrollSummaryTableData(
+    id: id ?? this.id,
+    periodId: periodId ?? this.periodId,
+    workerId: workerId ?? this.workerId,
+    workerName: workerName ?? this.workerName,
+    workerRate: workerRate ?? this.workerRate,
+    totalWage: totalWage ?? this.totalWage,
+    overtimePay: overtimePay ?? this.overtimePay,
+    bonus: bonus ?? this.bonus,
+    deduction: deduction ?? this.deduction,
+    totalDaysPresent: totalDaysPresent ?? this.totalDaysPresent,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PayrollSummaryTableData copyWithCompanion(PayrollSummaryTableCompanion data) {
+    return PayrollSummaryTableData(
+      id: data.id.present ? data.id.value : this.id,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      workerId: data.workerId.present ? data.workerId.value : this.workerId,
+      workerName: data.workerName.present
+          ? data.workerName.value
+          : this.workerName,
+      workerRate: data.workerRate.present
+          ? data.workerRate.value
+          : this.workerRate,
+      totalWage: data.totalWage.present ? data.totalWage.value : this.totalWage,
+      overtimePay: data.overtimePay.present
+          ? data.overtimePay.value
+          : this.overtimePay,
+      bonus: data.bonus.present ? data.bonus.value : this.bonus,
+      deduction: data.deduction.present ? data.deduction.value : this.deduction,
+      totalDaysPresent: data.totalDaysPresent.present
+          ? data.totalDaysPresent.value
+          : this.totalDaysPresent,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PayrollSummaryTableData(')
+          ..write('id: $id, ')
+          ..write('periodId: $periodId, ')
+          ..write('workerId: $workerId, ')
+          ..write('workerName: $workerName, ')
+          ..write('workerRate: $workerRate, ')
+          ..write('totalWage: $totalWage, ')
+          ..write('overtimePay: $overtimePay, ')
+          ..write('bonus: $bonus, ')
+          ..write('deduction: $deduction, ')
+          ..write('totalDaysPresent: $totalDaysPresent, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    periodId,
+    workerId,
+    workerName,
+    workerRate,
+    totalWage,
+    overtimePay,
+    bonus,
+    deduction,
+    totalDaysPresent,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PayrollSummaryTableData &&
+          other.id == this.id &&
+          other.periodId == this.periodId &&
+          other.workerId == this.workerId &&
+          other.workerName == this.workerName &&
+          other.workerRate == this.workerRate &&
+          other.totalWage == this.totalWage &&
+          other.overtimePay == this.overtimePay &&
+          other.bonus == this.bonus &&
+          other.deduction == this.deduction &&
+          other.totalDaysPresent == this.totalDaysPresent &&
+          other.createdAt == this.createdAt);
+}
+
+class PayrollSummaryTableCompanion
+    extends UpdateCompanion<PayrollSummaryTableData> {
+  final Value<int> id;
+  final Value<int> periodId;
+  final Value<int> workerId;
+  final Value<String> workerName;
+  final Value<double> workerRate;
+  final Value<double> totalWage;
+  final Value<double> overtimePay;
+  final Value<double> bonus;
+  final Value<double> deduction;
+  final Value<int> totalDaysPresent;
+  final Value<DateTime> createdAt;
+  const PayrollSummaryTableCompanion({
+    this.id = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.workerId = const Value.absent(),
+    this.workerName = const Value.absent(),
+    this.workerRate = const Value.absent(),
+    this.totalWage = const Value.absent(),
+    this.overtimePay = const Value.absent(),
+    this.bonus = const Value.absent(),
+    this.deduction = const Value.absent(),
+    this.totalDaysPresent = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PayrollSummaryTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int periodId,
+    required int workerId,
+    required String workerName,
+    required double workerRate,
+    required double totalWage,
+    required double overtimePay,
+    required double bonus,
+    required double deduction,
+    required int totalDaysPresent,
+    this.createdAt = const Value.absent(),
+  }) : periodId = Value(periodId),
+       workerId = Value(workerId),
+       workerName = Value(workerName),
+       workerRate = Value(workerRate),
+       totalWage = Value(totalWage),
+       overtimePay = Value(overtimePay),
+       bonus = Value(bonus),
+       deduction = Value(deduction),
+       totalDaysPresent = Value(totalDaysPresent);
+  static Insertable<PayrollSummaryTableData> custom({
+    Expression<int>? id,
+    Expression<int>? periodId,
+    Expression<int>? workerId,
+    Expression<String>? workerName,
+    Expression<double>? workerRate,
+    Expression<double>? totalWage,
+    Expression<double>? overtimePay,
+    Expression<double>? bonus,
+    Expression<double>? deduction,
+    Expression<int>? totalDaysPresent,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (periodId != null) 'period_id': periodId,
+      if (workerId != null) 'worker_id': workerId,
+      if (workerName != null) 'worker_name': workerName,
+      if (workerRate != null) 'worker_rate': workerRate,
+      if (totalWage != null) 'total_wage': totalWage,
+      if (overtimePay != null) 'overtime_pay': overtimePay,
+      if (bonus != null) 'bonus': bonus,
+      if (deduction != null) 'deduction': deduction,
+      if (totalDaysPresent != null) 'total_days_present': totalDaysPresent,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PayrollSummaryTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? periodId,
+    Value<int>? workerId,
+    Value<String>? workerName,
+    Value<double>? workerRate,
+    Value<double>? totalWage,
+    Value<double>? overtimePay,
+    Value<double>? bonus,
+    Value<double>? deduction,
+    Value<int>? totalDaysPresent,
+    Value<DateTime>? createdAt,
+  }) {
+    return PayrollSummaryTableCompanion(
+      id: id ?? this.id,
+      periodId: periodId ?? this.periodId,
+      workerId: workerId ?? this.workerId,
+      workerName: workerName ?? this.workerName,
+      workerRate: workerRate ?? this.workerRate,
+      totalWage: totalWage ?? this.totalWage,
+      overtimePay: overtimePay ?? this.overtimePay,
+      bonus: bonus ?? this.bonus,
+      deduction: deduction ?? this.deduction,
+      totalDaysPresent: totalDaysPresent ?? this.totalDaysPresent,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<int>(periodId.value);
+    }
+    if (workerId.present) {
+      map['worker_id'] = Variable<int>(workerId.value);
+    }
+    if (workerName.present) {
+      map['worker_name'] = Variable<String>(workerName.value);
+    }
+    if (workerRate.present) {
+      map['worker_rate'] = Variable<double>(workerRate.value);
+    }
+    if (totalWage.present) {
+      map['total_wage'] = Variable<double>(totalWage.value);
+    }
+    if (overtimePay.present) {
+      map['overtime_pay'] = Variable<double>(overtimePay.value);
+    }
+    if (bonus.present) {
+      map['bonus'] = Variable<double>(bonus.value);
+    }
+    if (deduction.present) {
+      map['deduction'] = Variable<double>(deduction.value);
+    }
+    if (totalDaysPresent.present) {
+      map['total_days_present'] = Variable<int>(totalDaysPresent.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PayrollSummaryTableCompanion(')
+          ..write('id: $id, ')
+          ..write('periodId: $periodId, ')
+          ..write('workerId: $workerId, ')
+          ..write('workerName: $workerName, ')
+          ..write('workerRate: $workerRate, ')
+          ..write('totalWage: $totalWage, ')
+          ..write('overtimePay: $overtimePay, ')
+          ..write('bonus: $bonus, ')
+          ..write('deduction: $deduction, ')
+          ..write('totalDaysPresent: $totalDaysPresent, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PayrollPeriodWorkersTableTable extends PayrollPeriodWorkersTable
+    with
+        TableInfo<
+          $PayrollPeriodWorkersTableTable,
+          PayrollPeriodWorkersTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PayrollPeriodWorkersTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _periodIdMeta = const VerificationMeta(
+    'periodId',
+  );
+  @override
+  late final GeneratedColumn<int> periodId = GeneratedColumn<int>(
+    'period_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES payrollperiod_table (id)',
+    ),
+  );
+  static const VerificationMeta _workerIdMeta = const VerificationMeta(
+    'workerId',
+  );
+  @override
+  late final GeneratedColumn<int> workerId = GeneratedColumn<int>(
+    'worker_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES workers (id)',
+    ),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, periodId, workerId, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'payroll_period_workers_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PayrollPeriodWorkersTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('period_id')) {
+      context.handle(
+        _periodIdMeta,
+        periodId.isAcceptableOrUnknown(data['period_id']!, _periodIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_periodIdMeta);
+    }
+    if (data.containsKey('worker_id')) {
+      context.handle(
+        _workerIdMeta,
+        workerId.isAcceptableOrUnknown(data['worker_id']!, _workerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_workerIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {periodId, workerId},
+  ];
+  @override
+  PayrollPeriodWorkersTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PayrollPeriodWorkersTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      periodId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}period_id'],
+      )!,
+      workerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worker_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PayrollPeriodWorkersTableTable createAlias(String alias) {
+    return $PayrollPeriodWorkersTableTable(attachedDatabase, alias);
+  }
+}
+
+class PayrollPeriodWorkersTableData extends DataClass
+    implements Insertable<PayrollPeriodWorkersTableData> {
+  final int id;
+  final int periodId;
+  final int workerId;
+  final DateTime createdAt;
+  const PayrollPeriodWorkersTableData({
+    required this.id,
+    required this.periodId,
+    required this.workerId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['period_id'] = Variable<int>(periodId);
+    map['worker_id'] = Variable<int>(workerId);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PayrollPeriodWorkersTableCompanion toCompanion(bool nullToAbsent) {
+    return PayrollPeriodWorkersTableCompanion(
+      id: Value(id),
+      periodId: Value(periodId),
+      workerId: Value(workerId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory PayrollPeriodWorkersTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PayrollPeriodWorkersTableData(
+      id: serializer.fromJson<int>(json['id']),
+      periodId: serializer.fromJson<int>(json['periodId']),
+      workerId: serializer.fromJson<int>(json['workerId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'periodId': serializer.toJson<int>(periodId),
+      'workerId': serializer.toJson<int>(workerId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  PayrollPeriodWorkersTableData copyWith({
+    int? id,
+    int? periodId,
+    int? workerId,
+    DateTime? createdAt,
+  }) => PayrollPeriodWorkersTableData(
+    id: id ?? this.id,
+    periodId: periodId ?? this.periodId,
+    workerId: workerId ?? this.workerId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  PayrollPeriodWorkersTableData copyWithCompanion(
+    PayrollPeriodWorkersTableCompanion data,
+  ) {
+    return PayrollPeriodWorkersTableData(
+      id: data.id.present ? data.id.value : this.id,
+      periodId: data.periodId.present ? data.periodId.value : this.periodId,
+      workerId: data.workerId.present ? data.workerId.value : this.workerId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PayrollPeriodWorkersTableData(')
+          ..write('id: $id, ')
+          ..write('periodId: $periodId, ')
+          ..write('workerId: $workerId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, periodId, workerId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PayrollPeriodWorkersTableData &&
+          other.id == this.id &&
+          other.periodId == this.periodId &&
+          other.workerId == this.workerId &&
+          other.createdAt == this.createdAt);
+}
+
+class PayrollPeriodWorkersTableCompanion
+    extends UpdateCompanion<PayrollPeriodWorkersTableData> {
+  final Value<int> id;
+  final Value<int> periodId;
+  final Value<int> workerId;
+  final Value<DateTime> createdAt;
+  const PayrollPeriodWorkersTableCompanion({
+    this.id = const Value.absent(),
+    this.periodId = const Value.absent(),
+    this.workerId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PayrollPeriodWorkersTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int periodId,
+    required int workerId,
+    this.createdAt = const Value.absent(),
+  }) : periodId = Value(periodId),
+       workerId = Value(workerId);
+  static Insertable<PayrollPeriodWorkersTableData> custom({
+    Expression<int>? id,
+    Expression<int>? periodId,
+    Expression<int>? workerId,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (periodId != null) 'period_id': periodId,
+      if (workerId != null) 'worker_id': workerId,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PayrollPeriodWorkersTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? periodId,
+    Value<int>? workerId,
+    Value<DateTime>? createdAt,
+  }) {
+    return PayrollPeriodWorkersTableCompanion(
+      id: id ?? this.id,
+      periodId: periodId ?? this.periodId,
+      workerId: workerId ?? this.workerId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (periodId.present) {
+      map['period_id'] = Variable<int>(periodId.value);
+    }
+    if (workerId.present) {
+      map['worker_id'] = Variable<int>(workerId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PayrollPeriodWorkersTableCompanion(')
+          ..write('id: $id, ')
+          ..write('periodId: $periodId, ')
+          ..write('workerId: $workerId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2035,6 +3069,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $WagecycleTableTable wagecycleTable = $WagecycleTableTable(this);
   late final $PayrollperiodTableTable payrollperiodTable =
       $PayrollperiodTableTable(this);
+  late final $PayrollSummaryTableTable payrollSummaryTable =
+      $PayrollSummaryTableTable(this);
+  late final $PayrollPeriodWorkersTableTable payrollPeriodWorkersTable =
+      $PayrollPeriodWorkersTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2044,6 +3082,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     attendance,
     wagecycleTable,
     payrollperiodTable,
+    payrollSummaryTable,
+    payrollPeriodWorkersTable,
   ];
 }
 
@@ -2055,6 +3095,7 @@ typedef $$WorkersTableCreateCompanionBuilder =
       Value<String> paymentType,
       required double rate,
       Value<DateTime> createdAt,
+      Value<DateTime?> deletedAt,
     });
 typedef $$WorkersTableUpdateCompanionBuilder =
     WorkersCompanion Function({
@@ -2064,6 +3105,7 @@ typedef $$WorkersTableUpdateCompanionBuilder =
       Value<String> paymentType,
       Value<double> rate,
       Value<DateTime> createdAt,
+      Value<DateTime?> deletedAt,
     });
 
 final class $$WorkersTableReferences
@@ -2083,6 +3125,61 @@ final class $$WorkersTableReferences
     ).filter((f) => f.workerId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_attendanceRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $PayrollSummaryTableTable,
+    List<PayrollSummaryTableData>
+  >
+  _payrollSummaryTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.payrollSummaryTable,
+        aliasName: $_aliasNameGenerator(
+          db.workers.id,
+          db.payrollSummaryTable.workerId,
+        ),
+      );
+
+  $$PayrollSummaryTableTableProcessedTableManager get payrollSummaryTableRefs {
+    final manager = $$PayrollSummaryTableTableTableManager(
+      $_db,
+      $_db.payrollSummaryTable,
+    ).filter((f) => f.workerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _payrollSummaryTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $PayrollPeriodWorkersTableTable,
+    List<PayrollPeriodWorkersTableData>
+  >
+  _payrollPeriodWorkersTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.payrollPeriodWorkersTable,
+        aliasName: $_aliasNameGenerator(
+          db.workers.id,
+          db.payrollPeriodWorkersTable.workerId,
+        ),
+      );
+
+  $$PayrollPeriodWorkersTableTableProcessedTableManager
+  get payrollPeriodWorkersTableRefs {
+    final manager = $$PayrollPeriodWorkersTableTableTableManager(
+      $_db,
+      $_db.payrollPeriodWorkersTable,
+    ).filter((f) => f.workerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _payrollPeriodWorkersTableRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2128,6 +3225,11 @@ class $$WorkersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> attendanceRefs(
     Expression<bool> Function($$AttendanceTableFilterComposer f) f,
   ) {
@@ -2150,6 +3252,58 @@ class $$WorkersTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> payrollSummaryTableRefs(
+    Expression<bool> Function($$PayrollSummaryTableTableFilterComposer f) f,
+  ) {
+    final $$PayrollSummaryTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.payrollSummaryTable,
+      getReferencedColumn: (t) => t.workerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollSummaryTableTableFilterComposer(
+            $db: $db,
+            $table: $db.payrollSummaryTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> payrollPeriodWorkersTableRefs(
+    Expression<bool> Function($$PayrollPeriodWorkersTableTableFilterComposer f)
+    f,
+  ) {
+    final $$PayrollPeriodWorkersTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.payrollPeriodWorkersTable,
+          getReferencedColumn: (t) => t.workerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollPeriodWorkersTableTableFilterComposer(
+                $db: $db,
+                $table: $db.payrollPeriodWorkersTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -2192,6 +3346,11 @@ class $$WorkersTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WorkersTableAnnotationComposer
@@ -2223,6 +3382,9 @@ class $$WorkersTableAnnotationComposer
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
   Expression<T> attendanceRefs<T extends Object>(
     Expression<T> Function($$AttendanceTableAnnotationComposer a) f,
   ) {
@@ -2247,6 +3409,59 @@ class $$WorkersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> payrollSummaryTableRefs<T extends Object>(
+    Expression<T> Function($$PayrollSummaryTableTableAnnotationComposer a) f,
+  ) {
+    final $$PayrollSummaryTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.payrollSummaryTable,
+          getReferencedColumn: (t) => t.workerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollSummaryTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.payrollSummaryTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> payrollPeriodWorkersTableRefs<T extends Object>(
+    Expression<T> Function($$PayrollPeriodWorkersTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$PayrollPeriodWorkersTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.payrollPeriodWorkersTable,
+          getReferencedColumn: (t) => t.workerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollPeriodWorkersTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.payrollPeriodWorkersTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$WorkersTableTableManager
@@ -2262,7 +3477,11 @@ class $$WorkersTableTableManager
           $$WorkersTableUpdateCompanionBuilder,
           (Worker, $$WorkersTableReferences),
           Worker,
-          PrefetchHooks Function({bool attendanceRefs})
+          PrefetchHooks Function({
+            bool attendanceRefs,
+            bool payrollSummaryTableRefs,
+            bool payrollPeriodWorkersTableRefs,
+          })
         > {
   $$WorkersTableTableManager(_$AppDatabase db, $WorkersTable table)
     : super(
@@ -2283,6 +3502,7 @@ class $$WorkersTableTableManager
                 Value<String> paymentType = const Value.absent(),
                 Value<double> rate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => WorkersCompanion(
                 id: id,
                 name: name,
@@ -2290,6 +3510,7 @@ class $$WorkersTableTableManager
                 paymentType: paymentType,
                 rate: rate,
                 createdAt: createdAt,
+                deletedAt: deletedAt,
               ),
           createCompanionCallback:
               ({
@@ -2299,6 +3520,7 @@ class $$WorkersTableTableManager
                 Value<String> paymentType = const Value.absent(),
                 required double rate,
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
               }) => WorkersCompanion.insert(
                 id: id,
                 name: name,
@@ -2306,6 +3528,7 @@ class $$WorkersTableTableManager
                 paymentType: paymentType,
                 rate: rate,
                 createdAt: createdAt,
+                deletedAt: deletedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -2315,35 +3538,90 @@ class $$WorkersTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({attendanceRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (attendanceRefs) db.attendance],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (attendanceRefs)
-                    await $_getPrefetchedData<
-                      Worker,
-                      $WorkersTable,
-                      AttendanceData
-                    >(
-                      currentTable: table,
-                      referencedTable: $$WorkersTableReferences
-                          ._attendanceRefsTable(db),
-                      managerFromTypedResult: (p0) => $$WorkersTableReferences(
-                        db,
-                        table,
-                        p0,
-                      ).attendanceRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.workerId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                attendanceRefs = false,
+                payrollSummaryTableRefs = false,
+                payrollPeriodWorkersTableRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (attendanceRefs) db.attendance,
+                    if (payrollSummaryTableRefs) db.payrollSummaryTable,
+                    if (payrollPeriodWorkersTableRefs)
+                      db.payrollPeriodWorkersTable,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (attendanceRefs)
+                        await $_getPrefetchedData<
+                          Worker,
+                          $WorkersTable,
+                          AttendanceData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkersTableReferences
+                              ._attendanceRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).attendanceRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.workerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (payrollSummaryTableRefs)
+                        await $_getPrefetchedData<
+                          Worker,
+                          $WorkersTable,
+                          PayrollSummaryTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkersTableReferences
+                              ._payrollSummaryTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).payrollSummaryTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.workerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (payrollPeriodWorkersTableRefs)
+                        await $_getPrefetchedData<
+                          Worker,
+                          $WorkersTable,
+                          PayrollPeriodWorkersTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$WorkersTableReferences
+                              ._payrollPeriodWorkersTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$WorkersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).payrollPeriodWorkersTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.workerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -2360,7 +3638,11 @@ typedef $$WorkersTableProcessedTableManager =
       $$WorkersTableUpdateCompanionBuilder,
       (Worker, $$WorkersTableReferences),
       Worker,
-      PrefetchHooks Function({bool attendanceRefs})
+      PrefetchHooks Function({
+        bool attendanceRefs,
+        bool payrollSummaryTableRefs,
+        bool payrollPeriodWorkersTableRefs,
+      })
     >;
 typedef $$AttendanceTableCreateCompanionBuilder =
     AttendanceCompanion Function({
@@ -3228,6 +4510,61 @@ final class $$PayrollperiodTableTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static MultiTypedResultKey<
+    $PayrollSummaryTableTable,
+    List<PayrollSummaryTableData>
+  >
+  _payrollSummaryTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.payrollSummaryTable,
+        aliasName: $_aliasNameGenerator(
+          db.payrollperiodTable.id,
+          db.payrollSummaryTable.periodId,
+        ),
+      );
+
+  $$PayrollSummaryTableTableProcessedTableManager get payrollSummaryTableRefs {
+    final manager = $$PayrollSummaryTableTableTableManager(
+      $_db,
+      $_db.payrollSummaryTable,
+    ).filter((f) => f.periodId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _payrollSummaryTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $PayrollPeriodWorkersTableTable,
+    List<PayrollPeriodWorkersTableData>
+  >
+  _payrollPeriodWorkersTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.payrollPeriodWorkersTable,
+        aliasName: $_aliasNameGenerator(
+          db.payrollperiodTable.id,
+          db.payrollPeriodWorkersTable.periodId,
+        ),
+      );
+
+  $$PayrollPeriodWorkersTableTableProcessedTableManager
+  get payrollPeriodWorkersTableRefs {
+    final manager = $$PayrollPeriodWorkersTableTableTableManager(
+      $_db,
+      $_db.payrollPeriodWorkersTable,
+    ).filter((f) => f.periodId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _payrollPeriodWorkersTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$PayrollperiodTableTableFilterComposer
@@ -3290,6 +4627,58 @@ class $$PayrollperiodTableTableFilterComposer
           ),
     );
     return composer;
+  }
+
+  Expression<bool> payrollSummaryTableRefs(
+    Expression<bool> Function($$PayrollSummaryTableTableFilterComposer f) f,
+  ) {
+    final $$PayrollSummaryTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.payrollSummaryTable,
+      getReferencedColumn: (t) => t.periodId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollSummaryTableTableFilterComposer(
+            $db: $db,
+            $table: $db.payrollSummaryTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> payrollPeriodWorkersTableRefs(
+    Expression<bool> Function($$PayrollPeriodWorkersTableTableFilterComposer f)
+    f,
+  ) {
+    final $$PayrollPeriodWorkersTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.payrollPeriodWorkersTable,
+          getReferencedColumn: (t) => t.periodId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollPeriodWorkersTableTableFilterComposer(
+                $db: $db,
+                $table: $db.payrollPeriodWorkersTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
   }
 }
 
@@ -3405,6 +4794,59 @@ class $$PayrollperiodTableTableAnnotationComposer
     );
     return composer;
   }
+
+  Expression<T> payrollSummaryTableRefs<T extends Object>(
+    Expression<T> Function($$PayrollSummaryTableTableAnnotationComposer a) f,
+  ) {
+    final $$PayrollSummaryTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.payrollSummaryTable,
+          getReferencedColumn: (t) => t.periodId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollSummaryTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.payrollSummaryTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> payrollPeriodWorkersTableRefs<T extends Object>(
+    Expression<T> Function($$PayrollPeriodWorkersTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$PayrollPeriodWorkersTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.payrollPeriodWorkersTable,
+          getReferencedColumn: (t) => t.periodId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollPeriodWorkersTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.payrollPeriodWorkersTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$PayrollperiodTableTableTableManager
@@ -3420,7 +4862,11 @@ class $$PayrollperiodTableTableTableManager
           $$PayrollperiodTableTableUpdateCompanionBuilder,
           (PayrollperiodTableData, $$PayrollperiodTableTableReferences),
           PayrollperiodTableData,
-          PrefetchHooks Function({bool cycleId})
+          PrefetchHooks Function({
+            bool cycleId,
+            bool payrollSummaryTableRefs,
+            bool payrollPeriodWorkersTableRefs,
+          })
         > {
   $$PayrollperiodTableTableTableManager(
     _$AppDatabase db,
@@ -3482,7 +4928,596 @@ class $$PayrollperiodTableTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({cycleId = false}) {
+          prefetchHooksCallback:
+              ({
+                cycleId = false,
+                payrollSummaryTableRefs = false,
+                payrollPeriodWorkersTableRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (payrollSummaryTableRefs) db.payrollSummaryTable,
+                    if (payrollPeriodWorkersTableRefs)
+                      db.payrollPeriodWorkersTable,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (cycleId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.cycleId,
+                                    referencedTable:
+                                        $$PayrollperiodTableTableReferences
+                                            ._cycleIdTable(db),
+                                    referencedColumn:
+                                        $$PayrollperiodTableTableReferences
+                                            ._cycleIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (payrollSummaryTableRefs)
+                        await $_getPrefetchedData<
+                          PayrollperiodTableData,
+                          $PayrollperiodTableTable,
+                          PayrollSummaryTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PayrollperiodTableTableReferences
+                              ._payrollSummaryTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PayrollperiodTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).payrollSummaryTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.periodId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (payrollPeriodWorkersTableRefs)
+                        await $_getPrefetchedData<
+                          PayrollperiodTableData,
+                          $PayrollperiodTableTable,
+                          PayrollPeriodWorkersTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PayrollperiodTableTableReferences
+                              ._payrollPeriodWorkersTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PayrollperiodTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).payrollPeriodWorkersTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.periodId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$PayrollperiodTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PayrollperiodTableTable,
+      PayrollperiodTableData,
+      $$PayrollperiodTableTableFilterComposer,
+      $$PayrollperiodTableTableOrderingComposer,
+      $$PayrollperiodTableTableAnnotationComposer,
+      $$PayrollperiodTableTableCreateCompanionBuilder,
+      $$PayrollperiodTableTableUpdateCompanionBuilder,
+      (PayrollperiodTableData, $$PayrollperiodTableTableReferences),
+      PayrollperiodTableData,
+      PrefetchHooks Function({
+        bool cycleId,
+        bool payrollSummaryTableRefs,
+        bool payrollPeriodWorkersTableRefs,
+      })
+    >;
+typedef $$PayrollSummaryTableTableCreateCompanionBuilder =
+    PayrollSummaryTableCompanion Function({
+      Value<int> id,
+      required int periodId,
+      required int workerId,
+      required String workerName,
+      required double workerRate,
+      required double totalWage,
+      required double overtimePay,
+      required double bonus,
+      required double deduction,
+      required int totalDaysPresent,
+      Value<DateTime> createdAt,
+    });
+typedef $$PayrollSummaryTableTableUpdateCompanionBuilder =
+    PayrollSummaryTableCompanion Function({
+      Value<int> id,
+      Value<int> periodId,
+      Value<int> workerId,
+      Value<String> workerName,
+      Value<double> workerRate,
+      Value<double> totalWage,
+      Value<double> overtimePay,
+      Value<double> bonus,
+      Value<double> deduction,
+      Value<int> totalDaysPresent,
+      Value<DateTime> createdAt,
+    });
+
+final class $$PayrollSummaryTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PayrollSummaryTableTable,
+          PayrollSummaryTableData
+        > {
+  $$PayrollSummaryTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PayrollperiodTableTable _periodIdTable(_$AppDatabase db) =>
+      db.payrollperiodTable.createAlias(
+        $_aliasNameGenerator(
+          db.payrollSummaryTable.periodId,
+          db.payrollperiodTable.id,
+        ),
+      );
+
+  $$PayrollperiodTableTableProcessedTableManager get periodId {
+    final $_column = $_itemColumn<int>('period_id')!;
+
+    final manager = $$PayrollperiodTableTableTableManager(
+      $_db,
+      $_db.payrollperiodTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_periodIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $WorkersTable _workerIdTable(_$AppDatabase db) =>
+      db.workers.createAlias(
+        $_aliasNameGenerator(db.payrollSummaryTable.workerId, db.workers.id),
+      );
+
+  $$WorkersTableProcessedTableManager get workerId {
+    final $_column = $_itemColumn<int>('worker_id')!;
+
+    final manager = $$WorkersTableTableManager(
+      $_db,
+      $_db.workers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_workerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PayrollSummaryTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PayrollSummaryTableTable> {
+  $$PayrollSummaryTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get workerName => $composableBuilder(
+    column: $table.workerName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get workerRate => $composableBuilder(
+    column: $table.workerRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalWage => $composableBuilder(
+    column: $table.totalWage,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get overtimePay => $composableBuilder(
+    column: $table.overtimePay,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get bonus => $composableBuilder(
+    column: $table.bonus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get deduction => $composableBuilder(
+    column: $table.deduction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalDaysPresent => $composableBuilder(
+    column: $table.totalDaysPresent,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PayrollperiodTableTableFilterComposer get periodId {
+    final $$PayrollperiodTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.payrollperiodTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollperiodTableTableFilterComposer(
+            $db: $db,
+            $table: $db.payrollperiodTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$WorkersTableFilterComposer get workerId {
+    final $$WorkersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workerId,
+      referencedTable: $db.workers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkersTableFilterComposer(
+            $db: $db,
+            $table: $db.workers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PayrollSummaryTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PayrollSummaryTableTable> {
+  $$PayrollSummaryTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get workerName => $composableBuilder(
+    column: $table.workerName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get workerRate => $composableBuilder(
+    column: $table.workerRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalWage => $composableBuilder(
+    column: $table.totalWage,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get overtimePay => $composableBuilder(
+    column: $table.overtimePay,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get bonus => $composableBuilder(
+    column: $table.bonus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get deduction => $composableBuilder(
+    column: $table.deduction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalDaysPresent => $composableBuilder(
+    column: $table.totalDaysPresent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PayrollperiodTableTableOrderingComposer get periodId {
+    final $$PayrollperiodTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.payrollperiodTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollperiodTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.payrollperiodTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$WorkersTableOrderingComposer get workerId {
+    final $$WorkersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workerId,
+      referencedTable: $db.workers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkersTableOrderingComposer(
+            $db: $db,
+            $table: $db.workers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PayrollSummaryTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PayrollSummaryTableTable> {
+  $$PayrollSummaryTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get workerName => $composableBuilder(
+    column: $table.workerName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get workerRate => $composableBuilder(
+    column: $table.workerRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalWage =>
+      $composableBuilder(column: $table.totalWage, builder: (column) => column);
+
+  GeneratedColumn<double> get overtimePay => $composableBuilder(
+    column: $table.overtimePay,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get bonus =>
+      $composableBuilder(column: $table.bonus, builder: (column) => column);
+
+  GeneratedColumn<double> get deduction =>
+      $composableBuilder(column: $table.deduction, builder: (column) => column);
+
+  GeneratedColumn<int> get totalDaysPresent => $composableBuilder(
+    column: $table.totalDaysPresent,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$PayrollperiodTableTableAnnotationComposer get periodId {
+    final $$PayrollperiodTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.periodId,
+          referencedTable: $db.payrollperiodTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollperiodTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.payrollperiodTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$WorkersTableAnnotationComposer get workerId {
+    final $$WorkersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workerId,
+      referencedTable: $db.workers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.workers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PayrollSummaryTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PayrollSummaryTableTable,
+          PayrollSummaryTableData,
+          $$PayrollSummaryTableTableFilterComposer,
+          $$PayrollSummaryTableTableOrderingComposer,
+          $$PayrollSummaryTableTableAnnotationComposer,
+          $$PayrollSummaryTableTableCreateCompanionBuilder,
+          $$PayrollSummaryTableTableUpdateCompanionBuilder,
+          (PayrollSummaryTableData, $$PayrollSummaryTableTableReferences),
+          PayrollSummaryTableData,
+          PrefetchHooks Function({bool periodId, bool workerId})
+        > {
+  $$PayrollSummaryTableTableTableManager(
+    _$AppDatabase db,
+    $PayrollSummaryTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PayrollSummaryTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PayrollSummaryTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PayrollSummaryTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> periodId = const Value.absent(),
+                Value<int> workerId = const Value.absent(),
+                Value<String> workerName = const Value.absent(),
+                Value<double> workerRate = const Value.absent(),
+                Value<double> totalWage = const Value.absent(),
+                Value<double> overtimePay = const Value.absent(),
+                Value<double> bonus = const Value.absent(),
+                Value<double> deduction = const Value.absent(),
+                Value<int> totalDaysPresent = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PayrollSummaryTableCompanion(
+                id: id,
+                periodId: periodId,
+                workerId: workerId,
+                workerName: workerName,
+                workerRate: workerRate,
+                totalWage: totalWage,
+                overtimePay: overtimePay,
+                bonus: bonus,
+                deduction: deduction,
+                totalDaysPresent: totalDaysPresent,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int periodId,
+                required int workerId,
+                required String workerName,
+                required double workerRate,
+                required double totalWage,
+                required double overtimePay,
+                required double bonus,
+                required double deduction,
+                required int totalDaysPresent,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PayrollSummaryTableCompanion.insert(
+                id: id,
+                periodId: periodId,
+                workerId: workerId,
+                workerName: workerName,
+                workerRate: workerRate,
+                totalWage: totalWage,
+                overtimePay: overtimePay,
+                bonus: bonus,
+                deduction: deduction,
+                totalDaysPresent: totalDaysPresent,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PayrollSummaryTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({periodId = false, workerId = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -3502,17 +5537,32 @@ class $$PayrollperiodTableTableTableManager
                       dynamic
                     >
                   >(state) {
-                    if (cycleId) {
+                    if (periodId) {
                       state =
                           state.withJoin(
                                 currentTable: table,
-                                currentColumn: table.cycleId,
+                                currentColumn: table.periodId,
                                 referencedTable:
-                                    $$PayrollperiodTableTableReferences
-                                        ._cycleIdTable(db),
+                                    $$PayrollSummaryTableTableReferences
+                                        ._periodIdTable(db),
                                 referencedColumn:
-                                    $$PayrollperiodTableTableReferences
-                                        ._cycleIdTable(db)
+                                    $$PayrollSummaryTableTableReferences
+                                        ._periodIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (workerId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.workerId,
+                                referencedTable:
+                                    $$PayrollSummaryTableTableReferences
+                                        ._workerIdTable(db),
+                                referencedColumn:
+                                    $$PayrollSummaryTableTableReferences
+                                        ._workerIdTable(db)
                                         .id,
                               )
                               as T;
@@ -3529,19 +5579,438 @@ class $$PayrollperiodTableTableTableManager
       );
 }
 
-typedef $$PayrollperiodTableTableProcessedTableManager =
+typedef $$PayrollSummaryTableTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $PayrollperiodTableTable,
-      PayrollperiodTableData,
-      $$PayrollperiodTableTableFilterComposer,
-      $$PayrollperiodTableTableOrderingComposer,
-      $$PayrollperiodTableTableAnnotationComposer,
-      $$PayrollperiodTableTableCreateCompanionBuilder,
-      $$PayrollperiodTableTableUpdateCompanionBuilder,
-      (PayrollperiodTableData, $$PayrollperiodTableTableReferences),
-      PayrollperiodTableData,
-      PrefetchHooks Function({bool cycleId})
+      $PayrollSummaryTableTable,
+      PayrollSummaryTableData,
+      $$PayrollSummaryTableTableFilterComposer,
+      $$PayrollSummaryTableTableOrderingComposer,
+      $$PayrollSummaryTableTableAnnotationComposer,
+      $$PayrollSummaryTableTableCreateCompanionBuilder,
+      $$PayrollSummaryTableTableUpdateCompanionBuilder,
+      (PayrollSummaryTableData, $$PayrollSummaryTableTableReferences),
+      PayrollSummaryTableData,
+      PrefetchHooks Function({bool periodId, bool workerId})
+    >;
+typedef $$PayrollPeriodWorkersTableTableCreateCompanionBuilder =
+    PayrollPeriodWorkersTableCompanion Function({
+      Value<int> id,
+      required int periodId,
+      required int workerId,
+      Value<DateTime> createdAt,
+    });
+typedef $$PayrollPeriodWorkersTableTableUpdateCompanionBuilder =
+    PayrollPeriodWorkersTableCompanion Function({
+      Value<int> id,
+      Value<int> periodId,
+      Value<int> workerId,
+      Value<DateTime> createdAt,
+    });
+
+final class $$PayrollPeriodWorkersTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PayrollPeriodWorkersTableTable,
+          PayrollPeriodWorkersTableData
+        > {
+  $$PayrollPeriodWorkersTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PayrollperiodTableTable _periodIdTable(_$AppDatabase db) =>
+      db.payrollperiodTable.createAlias(
+        $_aliasNameGenerator(
+          db.payrollPeriodWorkersTable.periodId,
+          db.payrollperiodTable.id,
+        ),
+      );
+
+  $$PayrollperiodTableTableProcessedTableManager get periodId {
+    final $_column = $_itemColumn<int>('period_id')!;
+
+    final manager = $$PayrollperiodTableTableTableManager(
+      $_db,
+      $_db.payrollperiodTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_periodIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $WorkersTable _workerIdTable(_$AppDatabase db) =>
+      db.workers.createAlias(
+        $_aliasNameGenerator(
+          db.payrollPeriodWorkersTable.workerId,
+          db.workers.id,
+        ),
+      );
+
+  $$WorkersTableProcessedTableManager get workerId {
+    final $_column = $_itemColumn<int>('worker_id')!;
+
+    final manager = $$WorkersTableTableManager(
+      $_db,
+      $_db.workers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_workerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PayrollPeriodWorkersTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PayrollPeriodWorkersTableTable> {
+  $$PayrollPeriodWorkersTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PayrollperiodTableTableFilterComposer get periodId {
+    final $$PayrollperiodTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.payrollperiodTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollperiodTableTableFilterComposer(
+            $db: $db,
+            $table: $db.payrollperiodTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$WorkersTableFilterComposer get workerId {
+    final $$WorkersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workerId,
+      referencedTable: $db.workers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkersTableFilterComposer(
+            $db: $db,
+            $table: $db.workers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PayrollPeriodWorkersTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PayrollPeriodWorkersTableTable> {
+  $$PayrollPeriodWorkersTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PayrollperiodTableTableOrderingComposer get periodId {
+    final $$PayrollperiodTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.periodId,
+      referencedTable: $db.payrollperiodTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PayrollperiodTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.payrollperiodTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$WorkersTableOrderingComposer get workerId {
+    final $$WorkersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workerId,
+      referencedTable: $db.workers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkersTableOrderingComposer(
+            $db: $db,
+            $table: $db.workers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PayrollPeriodWorkersTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PayrollPeriodWorkersTableTable> {
+  $$PayrollPeriodWorkersTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$PayrollperiodTableTableAnnotationComposer get periodId {
+    final $$PayrollperiodTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.periodId,
+          referencedTable: $db.payrollperiodTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PayrollperiodTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.payrollperiodTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$WorkersTableAnnotationComposer get workerId {
+    final $$WorkersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.workerId,
+      referencedTable: $db.workers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WorkersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.workers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PayrollPeriodWorkersTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PayrollPeriodWorkersTableTable,
+          PayrollPeriodWorkersTableData,
+          $$PayrollPeriodWorkersTableTableFilterComposer,
+          $$PayrollPeriodWorkersTableTableOrderingComposer,
+          $$PayrollPeriodWorkersTableTableAnnotationComposer,
+          $$PayrollPeriodWorkersTableTableCreateCompanionBuilder,
+          $$PayrollPeriodWorkersTableTableUpdateCompanionBuilder,
+          (
+            PayrollPeriodWorkersTableData,
+            $$PayrollPeriodWorkersTableTableReferences,
+          ),
+          PayrollPeriodWorkersTableData,
+          PrefetchHooks Function({bool periodId, bool workerId})
+        > {
+  $$PayrollPeriodWorkersTableTableTableManager(
+    _$AppDatabase db,
+    $PayrollPeriodWorkersTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PayrollPeriodWorkersTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PayrollPeriodWorkersTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PayrollPeriodWorkersTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> periodId = const Value.absent(),
+                Value<int> workerId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PayrollPeriodWorkersTableCompanion(
+                id: id,
+                periodId: periodId,
+                workerId: workerId,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int periodId,
+                required int workerId,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PayrollPeriodWorkersTableCompanion.insert(
+                id: id,
+                periodId: periodId,
+                workerId: workerId,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PayrollPeriodWorkersTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({periodId = false, workerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (periodId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.periodId,
+                                referencedTable:
+                                    $$PayrollPeriodWorkersTableTableReferences
+                                        ._periodIdTable(db),
+                                referencedColumn:
+                                    $$PayrollPeriodWorkersTableTableReferences
+                                        ._periodIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (workerId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.workerId,
+                                referencedTable:
+                                    $$PayrollPeriodWorkersTableTableReferences
+                                        ._workerIdTable(db),
+                                referencedColumn:
+                                    $$PayrollPeriodWorkersTableTableReferences
+                                        ._workerIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PayrollPeriodWorkersTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PayrollPeriodWorkersTableTable,
+      PayrollPeriodWorkersTableData,
+      $$PayrollPeriodWorkersTableTableFilterComposer,
+      $$PayrollPeriodWorkersTableTableOrderingComposer,
+      $$PayrollPeriodWorkersTableTableAnnotationComposer,
+      $$PayrollPeriodWorkersTableTableCreateCompanionBuilder,
+      $$PayrollPeriodWorkersTableTableUpdateCompanionBuilder,
+      (
+        PayrollPeriodWorkersTableData,
+        $$PayrollPeriodWorkersTableTableReferences,
+      ),
+      PayrollPeriodWorkersTableData,
+      PrefetchHooks Function({bool periodId, bool workerId})
     >;
 
 class $AppDatabaseManager {
@@ -3555,4 +6024,11 @@ class $AppDatabaseManager {
       $$WagecycleTableTableTableManager(_db, _db.wagecycleTable);
   $$PayrollperiodTableTableTableManager get payrollperiodTable =>
       $$PayrollperiodTableTableTableManager(_db, _db.payrollperiodTable);
+  $$PayrollSummaryTableTableTableManager get payrollSummaryTable =>
+      $$PayrollSummaryTableTableTableManager(_db, _db.payrollSummaryTable);
+  $$PayrollPeriodWorkersTableTableTableManager get payrollPeriodWorkersTable =>
+      $$PayrollPeriodWorkersTableTableTableManager(
+        _db,
+        _db.payrollPeriodWorkersTable,
+      );
 }

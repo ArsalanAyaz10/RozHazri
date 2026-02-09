@@ -6,6 +6,9 @@ import 'package:roz_hazri/features/fingerprint/bindings/fingerprint_binding.dart
 import 'package:roz_hazri/features/Pin/bindings/pin_binding.dart';
 import 'package:roz_hazri/features/home/bindings/home_binding.dart';
 import 'package:roz_hazri/features/splash/bindings/splash_binding.dart';
+import 'package:roz_hazri/features/wagecycle/bindings/wagecycle_binding.dart';
+import 'package:roz_hazri/features/wagecycle/views/createWageCycle_screen.dart';
+import 'package:roz_hazri/features/wagecycle/views/wageCycleList_screen.dart';
 import 'package:roz_hazri/features/worker/bindings/addworker_binding.dart';
 import 'package:roz_hazri/features/Pin/views/UnlockPin_screen.dart';
 import 'package:roz_hazri/features/fingerprint/views/fingerprint_screen.dart';
@@ -68,17 +71,31 @@ class AppPages {
       page: () => MarkAttendanceScreen(),
       binding: AttendanceBinding(),
     ),
-     GetPage(
+    GetPage(
       name: Routes.viewattendance,
       page: () => AttendanceSheetScreen(),
       binding: ViewAttendanceBinding(),
     ),
-    //   GetPage(name: Routes.reports,page: ()=> ReportsScreen()),
-    //   GetPage(name: Routes.account,page:()=> AccountScreen()),
-    //   GetPage(name: Routes.wagecycles,page:()=> WageCyclesScreen()),
+    GetPage(
+      name: Routes.wagecycles,
+      page: () => PayrollListScreen(),
+      binding: WageCycleBinding(),
+    ),
+    GetPage(
+      name: Routes.createwagecycle,
+      page: () => PayrollSetupScreen(),
+      binding: WageCycleBinding(),
+    ),
+    GetPage(
+      name: Routes.editwagecycle,
+      page: () => EditPayrollScreen(),
+      binding: WageCycleBinding(),
+    ),
+
     //   GetPage(name: Routes.payroll,page:()=> PayrollScreen()),
     //   GetPage(name: Routes.export,page:()=> ExportScreen()),
     //   GetPage(name: Routes.settings,page:()=> SettingsScreen()),
-    //
+    //   GetPage(name: Routes.reports,page: ()=> ReportsScreen()),
+    //   GetPage(name: Routes.account,page:()=> AccountScreen()),
   ];
 }

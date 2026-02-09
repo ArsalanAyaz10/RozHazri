@@ -6,15 +6,23 @@ abstract class Routes {
   static const pin = '/pin';
   static const matchpin = '/matchpin';
   static const fingerprint = '/fingerprint';
+
   static const workers = '/workers';
   static const addworkers = '/addworkers';
   static const editworkers = '/editworkers';
+
   static const attendance = '/attendance';
   static const viewattendance = '/viewattendance';
+
   static const reports = '/reports';
   static const account = '/account';
+
   static const wagecycles = '/wagecycles';
+  static const createwagecycle = '/createwagecycle';
+  static const editwagecycle = '/editwagecycle';
+
   static const payroll = '/payroll';
+
   static const export = '/export';
   static const settings = '/settings';
 }

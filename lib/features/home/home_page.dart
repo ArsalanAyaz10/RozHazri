@@ -195,7 +195,7 @@ class HomePage extends GetView<HomeController> {
                   ActionCard(
                     title: "Wage Cycles",
                     icon: Icons.history,
-                    onTap: () => Get.toNamed(Routes.viewattendance),
+                    onTap: () => Get.toNamed(Routes.wagecycles),
                   ),
                   ActionCard(
                     title: "Payroll",

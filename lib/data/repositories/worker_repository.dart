@@ -7,18 +7,26 @@ class WorkerRepository {
 
   WorkerRepository(this._db);
 
-  Future<List<Worker>> getAllWorkers() => _db.select(_db.workers).get();
+  Future<List<Worker>> getAllWorkers() =>
+      (_db.select(_db.workers)..where((t) => t.deletedAt.isNull())).get();
 
   Future<List<Worker>> searchWorkers(String query) {
-    return (_db.select(_db.workers)..where((t) => t.name.like('%$query%'))).get();
+    return (_db.select(_db.workers)
+          ..where((t) => t.name.like('%$query%') & t.deletedAt.isNull()))
+        .get();
   }
 
   // Insert worker
-  Future<int> addWorker(WorkersCompanion worker) => _db.into(_db.workers).insert(worker);
+  Future<int> addWorker(WorkersCompanion worker) =>
+      _db.into(_db.workers).insert(worker);
 
   // Update worker
-  Future<bool> updateWorker(Worker worker) => _db.update(_db.workers).replace(worker);
+  Future<bool> updateWorker(Worker worker) =>
+      _db.update(_db.workers).replace(worker);
 
-  // Delete
-  Future<int> deleteWorker(int id) => (_db.delete(_db.workers)..where((t) => t.id.equals(id))).go();
+  // Soft Delete
+  Future<int> deleteWorker(int id) {
+    return (_db.update(_db.workers)..where((t) => t.id.equals(id)))
+        .write(WorkersCompanion(deletedAt: Value(DateTime.now())));
+  }
 }

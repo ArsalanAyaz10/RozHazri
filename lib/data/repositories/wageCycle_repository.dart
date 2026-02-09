@@ -16,8 +16,8 @@ deleteCycleConfig()
     return _db.select(_db.wagecycleTable).getSingleOrNull();
   }
 
-  Future<void> saveCycleConfig(WagecycleTableCompanion wagecycle) async {
-    await _db.into(_db.wagecycleTable).insert(wagecycle);
+  Future<int> saveCycleConfig(WagecycleTableCompanion wagecycle) async {
+    return await _db.into(_db.wagecycleTable).insert(wagecycle);
   }
 
   Future<WagecycleTableData?> updateCycleConfig(

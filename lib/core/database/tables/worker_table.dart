@@ -7,4 +7,5 @@ class Workers extends Table {
   TextColumn get paymentType => text().withDefault(const Constant('DAILY'))();
   RealColumn get rate => real()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 }

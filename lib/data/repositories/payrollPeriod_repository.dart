@@ -8,13 +8,16 @@ class PayrollperiodRepository {
   PayrollperiodRepository(this._db);
 
   Future<PayrollperiodTableData?> getCurrentPeriod() async {
-    final now = DateTime.now();
-    final date = DateTime(now.year, now.month, now.day);
+    return getPeriodByDate(DateTime.now());
+  }
+
+  Future<PayrollperiodTableData?> getPeriodByDate(DateTime date) async {
+    final normalizedDate = DateTime(date.year, date.month, date.day);
 
     return (_db.select(_db.payrollperiodTable)..where(
           (tbl) =>
-              tbl.startDate.isSmallerOrEqualValue(date) &
-              tbl.endDate.isBiggerOrEqualValue(date) &
+              tbl.startDate.isSmallerOrEqualValue(normalizedDate) &
+              tbl.endDate.isBiggerOrEqualValue(normalizedDate) &
               tbl.isClosed.equals(false),
         ))
         .getSingleOrNull();
@@ -80,40 +83,8 @@ class PayrollperiodRepository {
       startDate = DateTime(next.year, next.month, next.day);
     }
 
-    // Calculate endDate using cycle configuration
-    DateTime endDate = startDate.add(Duration(days: cycle.cycleLengthDays - 1));
-
-    // Apply monthly adjustment if needed
-
-    if (cycle.cycleType == CycleType.monthly && cycle.autoAdjustMonthEnd) {
-      final lastDayOfMonth = DateTime(
-        endDate.year,
-        endDate.month + 1,
-        0,
-      ); // last day of that month
-      if (endDate.day > lastDayOfMonth.day) {
-        endDate = DateTime(
-          endDate.year,
-          endDate.month,
-          lastDayOfMonth.day,
-          23,
-          59,
-          59,
-        );
-      } else {
-        endDate = DateTime(
-          endDate.year,
-          endDate.month,
-          endDate.day,
-          23,
-          59,
-          59,
-        );
-      }
-    } else {
-      // For weekly/biweekly/custom
-      endDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-    }
+    // Calculate endDate: Strict 15-day rule (Start + 14 days)
+    DateTime endDate = startDate.add(const Duration(days: 14));
 
     // Calculate payDate using cycle.payDay
 
@@ -139,7 +110,7 @@ class PayrollperiodRepository {
             endDate: endDate,
             payDate: payDate,
             isClosed: false,
-            createdAt: DateTime.now(),
+            createdAt: Value(DateTime.now()),
           ),
         );
 

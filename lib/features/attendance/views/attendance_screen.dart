@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Worker;
 import 'package:intl/intl.dart';
+import 'package:roz_hazri/core/database/app_database.dart';
 import 'package:roz_hazri/core/utils/colors.dart';
 import 'package:roz_hazri/core/utils/fonts.dart';
 import 'package:roz_hazri/features/attendance/controllers/attendance_controller.dart';
@@ -28,55 +29,27 @@ class MarkAttendanceScreen extends GetView<AttendanceController> {
         centerTitle: true,
       ),
       backgroundColor: const Color.fromARGB(255, 246, 248, 246),
-
       body: Column(
         children: [
           _buildDateHeader(),
           _buildHorizontalCalendar(),
-          _buildReportButton(),
-          _buildListHeader(),
-          _buildWorkerList(),
-          _buildBottomSummary(),
+          Expanded(
+            child: Obx(() {
+              if (controller.activePeriod.value == null) {
+                print(" CHECK VALUE: ${controller.activePeriod.value}");
+                return _buildNoActiveShipmentView();
+              } else {
+                return Column(
+                  children: [
+                    _buildListHeader(),
+                    _buildWorkerList(),
+                    _buildBottomSummary(),
+                  ],
+                );
+              }
+            }),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildReportButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: GestureDetector(
-        onTap: () => Get.toNamed('/viewattendance'),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.green, width: 2),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.assignment_outlined,
-                color: Colors.green,
-                size: 20,
-              ),
-              const SizedBox(width: 6),
-              const Expanded(
-                child: Text(
-                  "View Attendance Report",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -88,20 +61,34 @@ class MarkAttendanceScreen extends GetView<AttendanceController> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Obx(
-            () => Row(
-              children: [
-                const Icon(Icons.calendar_month, color: Colors.green),
-                const SizedBox(width: 8),
-                Text(
-                  DateFormat(
-                    'EEEE, d MMM yyyy',
-                  ).format(controller.selectedDate.value),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
+            () => GestureDetector(
+              onTap: () async {
+                final DateTime? picked = await showDatePicker(
+                  context: Get.context!,
+                  initialDate: controller.selectedDate.value,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  controller.onDateChange(picked);
+                }
+              },
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_month, color: Colors.green),
+                  const SizedBox(width: 8),
+                  Text(
+                    DateFormat(
+                      'EEEE, d MMM yyyy',
+                    ).format(controller.selectedDate.value),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
-                ),
-              ],
+                  const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                ],
+              ),
             ),
           ),
         ],
@@ -209,7 +196,7 @@ class MarkAttendanceScreen extends GetView<AttendanceController> {
     );
   }
 
-  Widget _buildWorkerAttendanceCard(worker) {
+  Widget _buildWorkerAttendanceCard(Worker worker) {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -350,6 +337,71 @@ class MarkAttendanceScreen extends GetView<AttendanceController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNoActiveShipmentView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.lock_clock, size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          const Text(
+            "No Active Shipment",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Please start a new wage cycle\nto mark attendance.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReportButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: GestureDetector(
+        onTap: () => Get.toNamed('/viewattendance'),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.green, width: 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.assignment_outlined,
+                color: Colors.green,
+                size: 20,
+              ),
+              const SizedBox(width: 6),
+              const Expanded(
+                child: Text(
+                  "View Attendance Report",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

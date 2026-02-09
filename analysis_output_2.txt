@@ -1,0 +1,4 @@
+[warning] Unused import: 'package:roz_hazri/features/wagecycle/views/editwagecycle_screen.dart' (E:\Flutter Projects\roz_hazri\lib\app\routes\app_pages.dart:11:8)
+[info] Unnecessary braces in a string interpolation (E:\Flutter Projects\roz_hazri\lib\core\services\export_engine.dart:132:44)
+[info] Missing type annotation (E:\Flutter Projects\roz_hazri\lib\features\attendance\views\attendance_screen.dart:212:37)
+[warning] Unused import: 'package:roz_hazri/data/repositories/payrollPeriod_repository.dart' (E:\Flutter Projects\roz_hazri\lib\features\payroll\bindings\payroll_binding.dart:4:8)

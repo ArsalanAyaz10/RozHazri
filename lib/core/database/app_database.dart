@@ -7,18 +7,27 @@ import 'tables/worker_table.dart';
 import 'tables/attendance_table.dart';
 import 'tables/wagecycle_table.dart';
 import 'tables/payrollPeriod_table.dart';
+import 'tables/payrollSummary_table.dart';
+import 'tables/payrollPeriodWorkers_table.dart';
 
 // The generated file part
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [Workers, Attendance, WagecycleTable, PayrollperiodTable],
+  tables: [
+    Workers,
+    Attendance,
+    WagecycleTable,
+    PayrollperiodTable,
+    PayrollSummaryTable,
+    PayrollPeriodWorkersTable,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration {
@@ -33,6 +42,13 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           await m.createTable(wagecycleTable);
           await m.createTable(payrollperiodTable);
+        }
+        if (from < 4) {
+          await m.addColumn(workers, workers.deletedAt);
+          await m.createTable(payrollSummaryTable);
+        }
+        if (from < 5) {
+          await m.createTable(payrollPeriodWorkersTable);
         }
       },
       beforeOpen: (details) async {
